@@ -27,11 +27,24 @@ router.post('/register', (req, res) => {
   let userData = req.body
   console.log('userData', userData);
   let user = new User(userData)
-  user.save((error, registeredUser) => {
+
+  User.findOne({ email: userData.email }, (error, userTest) => {
     if (error) {
-      console.log(error);
+      console.log('error', error);
     } else {
-      res.status(200).send(registeredUser)
+      if (!userTest) {
+        user.save((error, registeredUser) => {
+          if (error) {
+            console.log(error);
+          } else {
+            res.status(200).send(registeredUser)
+            console.log('user added with success');
+          }
+        })
+      } else {
+        res.status(401).send('Mail already exist!')
+        console.log('mail already exist!');
+      }
     }
   })
 })
@@ -46,11 +59,14 @@ router.post('/login', (req, res) => {
     } else {
       if (!user) {
         res.status(401).send('Invalid email')
+        console.log('Invalid email');
       } else {
         if (user.password !== userData.password) {
           res.status(401).send('Invalid password')
+          console.log('Invalid password');
         } else {
           res.status(200).send(user)
+          console.log('Login with Success!');
         }
       }
     }
