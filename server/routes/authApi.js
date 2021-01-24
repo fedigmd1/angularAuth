@@ -13,7 +13,7 @@ const connectionParams = {
 
 mongoose.connect(db, connectionParams)
   .then(() => {
-    console.log('Connected to database ')
+    console.log('Connected to database from auth ')
   })
   .catch((err) => {
     console.error(`Error connecting to the database. \n${err}`);
