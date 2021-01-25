@@ -39,17 +39,16 @@ router.delete('/delete', (req, res) => {
       })
 })
 
-router.put('/update', (req, res) => {
-  let movie_id = req.query.id
+router.put('/edit', (req, res) => {
   let movieToUpdate = new Movie(req.body)
-  Movie.updateOne({ _id: movie_id }, movieToUpdate)
+  Movie.updateOne({ _id: movieToUpdate._id }, movieToUpdate)
     .then(
       () => {
         res.status(200).json({
-          message: 'Thing updated successfully!'
+          message: 'movie updated successfully!'
         });
-      }
-    ).catch(
+      })
+    .catch(
       (error) => {
         res.status(400).json({
           error: error
