@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Movie = require('../models/movies')
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
 const db = 'mongodb+srv://fedigmd:Az11610141@cluster0.gisjg.mongodb.net/Netflix_app?retryWrites=true&w=majority'
 
 const connectionParams = {
@@ -22,7 +23,23 @@ router.get('/', (req, res) => {
   res.send('From Movie Api route')
 })
 
-router.delete('/delete', (req, res) => {
+function verifyToken(req, res, next) {
+  if (!req.headers.authorization) {
+    return res.status(400).send('Unauthorized request')
+  }
+  let token = req.headers.authorization.split(' ')[1]
+  if (token === 'null') {
+    return res.status(401).send('Unauthorized request')
+  }
+  let payload = jwt.verify(token, 'secretkey')
+  if (!payload) {
+    return res.status(401).send('Unauthorized request')
+  }
+  req.userId = payload.subject
+  next()
+}
+
+router.delete('/delete', verifyToken, (req, res) => {
   let movie_id = req.query.id
   Movie.deleteOne({ _id: movie_id })
     .then(
@@ -39,7 +56,7 @@ router.delete('/delete', (req, res) => {
       })
 })
 
-router.put('/edit', (req, res) => {
+router.put('/edit', verifyToken, (req, res) => {
   let movieToUpdate = new Movie(req.body)
   Movie.updateOne({ _id: movieToUpdate._id }, movieToUpdate)
     .then(
@@ -56,7 +73,7 @@ router.put('/edit', (req, res) => {
       });
 });
 
-router.post('/add', (req, res) => {
+router.post('/add', verifyToken, (req, res) => {
   let movieToRegister = new Movie(req.body)
   movieToRegister.save((error, registeredMovie) => {
     if (error) {
@@ -67,7 +84,7 @@ router.post('/add', (req, res) => {
   })
 })
 
-router.get('/popular', (req, res) => {
+router.get('/popular', verifyToken, (req, res) => {
   Movie.find({ type: "popular" }, (err, movies) => {
     if (err) {
       console.log(err);
@@ -77,7 +94,7 @@ router.get('/popular', (req, res) => {
   });
 })
 
-router.get('/playnow', (req, res) => {
+router.get('/playnow', verifyToken, (req, res) => {
   Movie.find({ type: "playNow" }, (err, movies) => {
     if (err) {
       console.log(err);
@@ -87,7 +104,7 @@ router.get('/playnow', (req, res) => {
   });
 })
 
-router.get('/toprated', (req, res) => {
+router.get('/toprated', verifyToken, (req, res) => {
   Movie.find({ type: "topRated" }, (err, movies) => {
     if (err) {
       console.log(err);
@@ -97,7 +114,7 @@ router.get('/toprated', (req, res) => {
   });
 })
 
-router.get('/upcoming', (req, res) => {
+router.get('/upcoming', verifyToken, (req, res) => {
   Movie.find({ type: "upComing" }, (err, movies) => {
     if (err) {
       console.log(err);
@@ -107,7 +124,7 @@ router.get('/upcoming', (req, res) => {
   });
 })
 
-router.get('/details', (req, res) => {
+router.get('/details', verifyToken, (req, res) => {
   let movie_id = req.query.id
   Movie.findOne({ _id: movie_id }, (err, movie) => {
     if (err) {
