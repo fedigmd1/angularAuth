@@ -19,6 +19,22 @@ mongoose.connect(db, connectionParams)
     console.error(`Error connecting to the database. \n${err}`);
   })
 
+function verifyToken(req, res, next) {
+  if (!req.headers.authorization) {
+    return res.status(400).send('Unauthorized request')
+  }
+  let token = req.headers.authorization.split(' ')[1]
+  if (token === 'null') {
+    return res.status(401).send('Unauthorized request')
+  }
+  let payload = jwt.verify(token, 'secretkey')
+  if (!payload) {
+    return res.status(401).send('Unauthorized request')
+  }
+  req.userId = payload.subject
+  next()
+}
+
 
 router.get('/', (req, res) => {
   res.send('From Api route')
@@ -73,6 +89,21 @@ router.post('/login', (req, res) => {
           res.status(200).send({ token })
           console.log('Login with Success!');
         }
+      }
+    }
+  })
+})
+
+router.get('/user', verifyToken, (req, res) => {
+  User.findOne({ _id: req.userId }, (err, user) => {
+    if (err) {
+      res.status(500).send('error')
+      console.log(err);
+    } else {
+      if (!user) {
+        res.status(401).send('not found')
+      } else {
+        res.status(200).send({ user })
       }
     }
   })
